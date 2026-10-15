@@ -21,12 +21,6 @@ const requiredEnv = [
   "EMAIL_APP_PASSWORD",
 ];
 
-for (const key of requiredEnv) {
-  if (!process.env[key]) {
-    console.warn(`Missing environment variable: ${key}`);
-  }
-}
-
 const allowedOrigins = [
   process.env.CLIENT_URL,
   "http://localhost:5173",
@@ -58,14 +52,28 @@ app.use(
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true }));
 
+app.use((req, res, next) => {
+  console.log("Incoming request:", {
+    method: req.method,
+    originalUrl: req.originalUrl,
+    url: req.url,
+    path: req.path,
+    xMatchedPath: req.headers["x-matched-path"],
+  });
+
+  next();
+});
+
 let databasePromise;
 
 const ensureDatabaseConnection = () => {
   if (!databasePromise) {
-    databasePromise = connectDB().catch((error) => {
-      databasePromise = null;
-      throw error;
-    });
+    databasePromise = Promise.resolve()
+      .then(() => connectDB())
+      .catch((error) => {
+        databasePromise = null;
+        throw error;
+      });
   }
 
   return databasePromise;
@@ -110,6 +118,12 @@ app.use("/api/event-registrations", eventRegistrationRoutes);
 app.use("/api/events", eventRouter);
 
 app.use((req, res) => {
+  console.warn("Unmatched API request:", {
+    method: req.method,
+    originalUrl: req.originalUrl,
+    path: req.path,
+  });
+
   res.status(404).json({
     success: false,
     message: "API endpoint not found.",
