@@ -3,7 +3,15 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/api/:path*",
+      "destination": "/server.js"
+    },
+    {
+      "source": "/debug/:path*",
+      "destination": "/server.js"
+    },
+    {
+      "source": "/",
       "destination": "/server.js"
     }
   ]
