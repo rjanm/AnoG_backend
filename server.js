@@ -65,6 +65,16 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/debug/request", (req, res) => {
+  res.status(200).json({
+    success: true,
+    originalUrl: req.originalUrl,
+    url: req.url,
+    path: req.path,
+    matchedPath: req.headers["x-matched-path"] || null,
+  });
+});
+
 let databasePromise;
 
 const ensureDatabaseConnection = () => {
@@ -122,6 +132,7 @@ app.use((req, res) => {
   console.warn("Unmatched API request:", {
     method: req.method,
     originalUrl: req.originalUrl,
+    url: req.url,
     path: req.path,
   });
 
