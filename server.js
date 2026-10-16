@@ -37,15 +37,34 @@ app.disable("x-powered-by");
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      const isAllowedOrigin =
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        /^http:\/\/localhost:\d+$/.test(origin) ||
+        /^http:\/\/127\.0\.0\.1:\d+$/.test(origin);
+
+      if (isAllowedOrigin) {
         return callback(null, true);
       }
 
       console.warn("Blocked CORS origin:", origin);
-      return callback(new Error("CORS origin not allowed"));
+
+      return callback(
+        new Error("CORS origin not allowed")
+      );
     },
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+    ],
     credentials: true,
   })
 );
@@ -63,16 +82,6 @@ app.use((req, res, next) => {
   });
 
   next();
-});
-
-app.get("/debug/request", (req, res) => {
-  res.status(200).json({
-    success: true,
-    originalUrl: req.originalUrl,
-    url: req.url,
-    path: req.path,
-    matchedPath: req.headers["x-matched-path"] || null,
-  });
 });
 
 let databasePromise;
